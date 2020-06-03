@@ -49,6 +49,7 @@ public:
     Polynom();
     Polynom(long long _prime, std::vector<long long> keys);              //for all terms
     Polynom(long long _prime, std::vector<std::vector<long long>> keys); //for some terms
+    Polynom(long long _prime, std::string polynom, char X);
     Polynom(const Polynom &other)
     { // copy constructor
         this->prime = other.prime;
@@ -103,6 +104,8 @@ public:
     void operator=(const Polynom &other)
     {
         prime = other.getPrime();
+        if (head)
+            delete head;
         head = nullptr;
         PolyTerm *tmp = other.getHead();
         while (tmp)
@@ -168,8 +171,14 @@ public:
     Polynom derivative() const;
     long long valueAtPoint(long long x) const;
     void normalization();
+
     /** #3      @author Karina Masol & Yuriy Momotenko     **/
-    //...
+    //Finding roots of the polynomial
+    std::vector<Polynom> findRoots();
+    //bringing polynomial to the power
+    Polynom toThePower(long long pow) const;
+    //get instead of polynom f(x) - polynom f(x-b)
+    Polynom getWithOtherParameter(long long b) const;
 
     /** #4      @author Yana Skyrda    **/
     /*! #4
@@ -182,7 +191,7 @@ public:
     /*! #7
 	* @brief This method calculates greatest common divisor of two polynoms
 	*/
-    Polynom gcd(Polynom p);
+    Polynom gcd(const Polynom& other);
 
     /* #9
     * @brief Equal operator
@@ -198,16 +207,9 @@ public:
     /*! #10
      * @author Hryshchenko Yurii
      * @brief Gets irreducible factors of nth cyclomotic polynomial using Ri polynomials
+     * @param amount If maxCount > 0, finds "maxCount" factors at most, otherwise finds all factors.
      */
-    std::vector<Polynom> factorizeCyclotomicRi(size_t n);
-
-    /*! #5
-    * @author Yaroslava Levchuk Natalia Makarenko
-    * @brief This function implements algorithm  for finding invers
-    */
-    Polynom inversPoly(long long number, Polynom const &pol1);
-
-    long long gcdforinvers(long long a, long long b, long long *x, long long *y);
+    std::vector<Polynom> factorizeCyclotomicRi(size_t n, size_t maxCount = 0);
 
     /*! #12
      * @author Vladyslav Prokopchuk
@@ -217,11 +219,36 @@ public:
     static std::vector<Polynom> allIrreduciblePolynomials(long long prime, long long n);
 
     /*! #12
+     * @brief Finds "size" irreducible polynomials of degree n
+     * @return Vector of all irreducible polynomials of degree n
+     */
+    static std::vector<Polynom> nIrreduciblePolynomials(long long prime, long long n, int size);
+
+    /*! #12
      * @author Vladyslav Prokopchuk
      * @brief Finds one irreducible polynomial of degree n
      * @return Irreducible polynomial of degree n
      */
     static Polynom findIrreduciblePolynomial(long long prime, long long n);
+
+    /*! #13
+     * @author Totskyi Alexander
+     * @brief Checks if the polynomial is irreducible
+     * @return 1 - if irreducible, 0 - reducible
+     */
+    bool isIrreducible();
+
+    /*! @author Medynskyi Mykola
+    * @brief Finds berlekamp matrix
+    * @return berlekamp matrix
+    */
+    Matrix buildBerlekampMatrix() const;
+
+    /*! @author Medynskyi Mykola, Pashchenko Dmytro
+    * @brief factorizes polynomial by Berlekamp algorithm
+    * @return string with factorized polinomial
+    */
+    std::string berlekampAlgorithm() const;
 
 protected:
     /*! #1
@@ -253,4 +280,33 @@ protected:
 	* @brief Division
 	*/
     std::pair<Polynom, Polynom> simple_division(Polynom const &p1, Polynom const &p2) const;
+
+    /*! @author  Datsiuk Vitaliy, Medynskyi Mykola
+    * @brief Computes the square free decomposition of the given polynomial. Returns a
+    * list of pairs. The first element of the pair is a factor of the given
+    * polynomial, and the second, its multiplicity.
+    * @return vector of pairs<Polynom, int>
+    */
+    std::vector<std::pair<Polynom, long long>> squareFreeDecomposition() const;
+
+    /*! @author Medynskyi Mykola
+    * @brief Finds pth root of given polynom
+    * @return polynom
+    */
+    Polynom pthRoot(Polynom f);
+
+    std::vector<std::pair<std::vector<Polynom>, long long>> berlekampAlgorithmMainCase(std::vector<std::pair<Polynom, long long>> const& unmultiple_factors) const;
+
+    /*! @author Pashchenko Dmytro
+    * @brief builds polynomial basis of solution space of comparison system h^p = h (mod f)
+    * @return basis polynomials
+    */
+    std::vector<Polynom> getComparisonSystemSolutionBasis() const;
+
+    /*! @author Pashchenko Dmytro
+    * @brief factorizes unmultiple factors using basis polynomials (f = Ï(gcd(f, h - a)))
+    * @return massive with pairs "polynomials, their multiplicity"
+    */
+    std::vector<std::pair<std::vector<Polynom>, long long>> factorizeByBasisPolynomials(std::vector<std::pair<Polynom, long long>> const &unmultiple_factors, 
+        std::vector<Polynom> const &basis) const;
 };
